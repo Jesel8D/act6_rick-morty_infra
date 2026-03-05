@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # 1. Contenedor de la aplicación Frontend
+  frontend:
+    build:
+      context: ../act6_rick-morty_frontend
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    networks:
+      - rnm_network
+    restart: unless-stopped
+
+  # 2. Contenedor Nginx (Proxy Inverso)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+    networks:
+      - rnm_network
+    restart: unless-stopped
+
+  # 3. Base de Datos Postgres para el microservicio de persistencia
+  postgresdb:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - rnm_network
+    restart: unless-stopped
+
+networks:
+  rnm_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
